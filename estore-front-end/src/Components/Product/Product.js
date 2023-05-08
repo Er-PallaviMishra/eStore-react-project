@@ -19,7 +19,6 @@ const Product = () => {
     useEffect(() => {
         dispatch(actions.getProduct());
     }, [])
-    console.log(products);
 
     return (
         <div className="row">

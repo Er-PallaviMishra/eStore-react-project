@@ -1,73 +1,74 @@
 import * as actionTypes from "./types";
+import axios from "axios";
 
-const productcategories = [{
-    Id: 1,
-    Category: "kids",
-    SubCategory: [{
-        Id: 1,
-        Name: "Dresses",
-    },
-    {
-        Id: 2,
-        Name: "Footwears",
-    }, {
-        Id: 3,
-        Name: "accessories",
-    }]
-},
-{
-    Id: 2,
-    Category: "Men",
-    SubCategory: [{
-        Id: 1,
-        Name: "Dresses",
-    },
-    {
-        Id: 2,
-        Name: "Footwears",
-    }, {
-        Id: 3,
-        Name: "accessories",
-    }]
-}]
+export const getProductcategories = () => async (dispatch) => {
 
-const product = [{
-    Id: 1,
-    imageSrc:require('../../../assets/img/shop-1.jpg'),
-    name: "product 1",
-    price: "Rs 1000.00"
+    let productcategories = [];
 
-},
-{
-    Id: 2,
-    imageSrc: require("../../../assets/img/shop-2.jpg"),
-    name: "product 2",
-    price: "Rs 2000.00"
+    await axios({
+        method: "get",
+        url: "http://localhost:5001/product/api/getCategories"
+    }).then((res) => {
 
-},
-{
-    Id: 3,
-    imageSrc: require("../../../assets/img/shop-5.jpg"),
-    name: "product 3",
-    price: "Rs 2500.00"
+        let parentCategory = res.data.data.filter(x => x.parentcategoryid === null);
 
-}
-]
+        parentCategory.map((item) => {
+            let t = {
+                Id: item.id,
+                Category: item.category,
+                SubCategory: res.data.data
+                    .filter(x => x.parentcategoryid === item.id)
+                    .map(y => {
+                        return {
+                            Id: y.id,
+                            Name: y.category
+                        }
+                    })
+            }
+            return productcategories.push(t);
+        })
 
-export const getProductcategories = () => async (dispatch) => (
+    }).catch((err) => {
+        console.log("response error-", err);
+    })
 
     dispatch({
         type: actionTypes.PRODUCT_CATEGORY,
         data: productcategories
     })
 
-)
+}
 
-export const getProduct = () => async (dispatch) => (
+export const getProduct = () => async (dispatch) => {
 
-    dispatch({
-        type: actionTypes.PRODUCT,
-        data: product
+    await axios({
+        method: "get",
+        url: "http://localhost:5001/product/api/getProducts"
+    }).then((res) => {
+
+        try {
+            let productList = res.data.data.map((item) => {
+                return {
+                    Id: item.id,
+                    imageSrc: `http://localhost:5001/${item.product_img}`,
+                    name: item.product_name,
+                    price: item.price
+                }
+            })
+            dispatch(_getProducts(productList));
+
+        } catch (ex) {
+            console.log(ex);
+        }
+
+    }).catch((err) => {
+        console.log("response error-", err);
     })
 
-)
+}
+export const _getProducts = (data) => {
+    return {
+        type: actionTypes.PRODUCT,
+        data: data
+    }
+}

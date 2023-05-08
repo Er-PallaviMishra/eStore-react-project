@@ -1,8 +1,13 @@
 const express= require('express');
 const app= express();
+const cors= require("cors");
+
+app.use(cors());
 
 const product=require('./Routes/product');
 app.use("/product/api",product);
+
+app.use("/",express.static("uploads"));
 
 const PORT=5001;
 const server=app.listen(PORT,()=>{
