@@ -1,18 +1,67 @@
 import * as actionTypes from "./types";
 import axios from "axios";
 
-export const getProductcategories = () => async (dispatch) => {
+// const productCategories = [
+//     {
+//         Id: 1,
+//         Category: 'Kids',
+//         SubCategory: [{
+//             Id: 1,
+//             Name: 'Dresses'
+//         },
+//         {
+//             Id: 2,
+//             Name: 'Jacket'
+//         }]
+//     },
+//     {
+//         Id: 2,
+//         Category: 'Men',
+//         SubCategory: [{
+//             Id: 1,
+//             Name: 'TShirt'
+//         },
+//         {
+//             Id: 2,
+//             Name: 'Jacket'
+//         }]
+//     }
+// ]
 
-    let productcategories = [];
+// const product = [
+//     {
+//         Id: 1,
+//         imageSrc: require('../../../assets/img/shop-1.jpg'),
+//         name: 'Product 1',
+//         price: '$10.00'
+//     },
+//     {
+//         Id: 2,
+//         imageSrc: require('../../../assets/img/shop-2.jpg'),
+//         name: 'Product 2',
+//         price: '$20.00'
+//     },
+//     {
+//         Id: 3,
+//         imageSrc: require('../../../assets/img/shop-3.jpg'),
+//         name: 'Product 3',
+//         price: '$25.00'
+//     }
+// ]
 
+export const getProductCategories = () => async (dispatch) => {
+    let tempCat = [];
     await axios({
         method: "get",
-        url: "http://localhost:5001/product/api/getCategories"
+        url: "http://localhost:5000/product/api/getCategories"
     }).then((res) => {
 
-        let parentCategory = res.data.data.filter(x => x.parentcategoryid === null);
+        let parentCat = res.data.data
+            .filter(x => x.parentcategoryid === null);
 
-        parentCategory.map((item) => {
+
+
+        parentCat.map((item) => {
             let t = {
                 Id: item.id,
                 Category: item.category,
@@ -25,50 +74,108 @@ export const getProductcategories = () => async (dispatch) => {
                         }
                     })
             }
-            return productcategories.push(t);
-        })
+            return tempCat.push(t);
 
+        })
     }).catch((err) => {
-        console.log("response error-", err);
+        console.log("RESPONSE ERROR", err);
     })
 
     dispatch({
         type: actionTypes.PRODUCT_CATEGORY,
-        data: productcategories
+        data: tempCat
     })
-
 }
 
-export const getProduct = () => async (dispatch) => {
+export const getProducts = () => async (dispatch) => {
 
     await axios({
-        method: "get",
-        url: "http://localhost:5001/product/api/getProducts"
-    }).then((res) => {
-
+        method: 'get',
+        url: 'http://localhost:5000/product/api/getProducts'
+    }).then(res => {
         try {
-            let productList = res.data.data.map((item) => {
+            let productList = res.data.data.map(item => {
                 return {
                     Id: item.id,
-                    imageSrc: `http://localhost:5001/${item.product_img}`,
+                    categoryId: item.category_id,
+                    imageSrc: `http://localhost:5000/${item.product_img}`,
                     name: item.product_name,
                     price: item.price
+
                 }
             })
             dispatch(_getProducts(productList));
-
-        } catch (ex) {
+            dispatch(_getFilteredProducts(productList));
+        }
+        catch (ex) {
             console.log(ex);
         }
 
-    }).catch((err) => {
-        console.log("response error-", err);
+
+    }).catch(err => {
+        console.log("catch err", err)
     })
 
+
+    // dispatch({
+    //     type: actionTypes.PRODUCT,
+    //     data: product
+    // })
 }
+
 export const _getProducts = (data) => {
     return {
         type: actionTypes.PRODUCT,
-        data: data
+        data
     }
+}
+
+export const _getFilteredProducts = (data) => {
+    return {
+        type: actionTypes.FILTER_PRODUCT,
+        data
+    }
+}
+
+export const applyFilter = (param, data) => async (dispatch) => {
+
+    let query = buildQuery(param);
+    let filteredData = filterData(data.products,query);
+    dispatch(_getFilteredProducts(filteredData));
+
+}
+
+const buildQuery = (filter) => {
+    let query = {};
+    for (let keys in filter) {
+        query[keys] = filter[keys];
+    }
+    return query;
+}
+
+
+const filterData=(data,query)=>{
+    const keysHavingMinMax=["price"];
+
+    const filteredData = data.filter(item=>{
+            for(let keys in query){
+
+                if(query[keys]===undefined) return false;
+                else if(keysHavingMinMax.includes(keys)){
+                    if(query[keys]['min']!==null && item[keys]<query[keys]['min']){
+                        return false;
+                    }
+                    if(query[keys]['max']!==null && item[keys]>query[keys]['max']){
+                        return false;
+                    }
+                }
+                else if(!query[keys].includes(item[keys])) return false;
+
+            }
+            return true;
+
+    });
+
+    return filteredData;
+
 }

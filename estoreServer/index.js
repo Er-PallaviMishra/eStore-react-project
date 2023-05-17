@@ -9,7 +9,7 @@ app.use("/product/api",product);
 
 app.use("/",express.static("uploads"));
 
-const PORT=5001;
+const PORT=5000;
 const server=app.listen(PORT,()=>{
     console.log("App is running on port-"  +PORT);
 })

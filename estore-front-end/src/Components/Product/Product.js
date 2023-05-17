@@ -6,20 +6,20 @@ import "./_product.scss";
 
 const Product = () => {
     const dispatch = useDispatch();
-    const { product: { products }} = useSelector((obj) => obj);
+    const { product: { products,filteredProduct},cart} = useSelector((obj) => obj);
 
 
     useEffect(() => {
-        dispatch(actions.getProduct());
+        dispatch(actions.getProducts());
     }, [])
 
    const addCartItem = (item) => {
         dispatch(actions.addCartItem(item));
     }
-
     return (
         <div className="row">
-            {products.map((item) => (
+            {filteredProduct.map((item) => (
+               
                 <div className="col-lg-4 col-md-6">
                     <div className="product__item">
                         <div className="product__item__pic">
