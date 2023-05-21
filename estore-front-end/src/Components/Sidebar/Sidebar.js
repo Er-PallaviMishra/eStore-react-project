@@ -15,8 +15,6 @@ const Sidebar = () => {
     }, [])
 
     const applyFilter = (item) => {
-
-
         let tmpFilter = {
             ...filter,
             categoryId: item.map(x => x.Id)
